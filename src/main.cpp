@@ -2,11 +2,11 @@
 #include "cqrs/Application.h"
 
 int main(int argc, const char* argv[]) {
-	
-	cqrs::Application theApp;
-	theApp.run(argc, argv);
+    
+    cqrs::Application theApp;
+    theApp.run(argc, argv);
 
-	std::cin.get();
+    std::cin.get();
 
-	return 0;
+    return 0;
 }
