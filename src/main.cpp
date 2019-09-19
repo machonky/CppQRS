@@ -1,16 +1,5 @@
 #include <iostream>
-
-namespace cqrs {
-
-	class Application {
-	public:
-		void run(int argc, const char* argv[])
-		{
-			std::cout << "Hello CQRS" << std::endl;
-		}
-	};
-
-}
+#include "cqrs/Application.h"
 
 int main(int argc, const char* argv[]) {
 	
