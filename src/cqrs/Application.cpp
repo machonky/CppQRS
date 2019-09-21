@@ -1,17 +1,20 @@
 #include <iostream>
+#include <string>
+#include <type_traits>
+#include <caf/all.hpp>
 #include "cqrs/Application.h"
-#include "logger/Logger.h"
+#include "cqrs/AppRootActor.h"
 
 namespace cqrs {
 
-    Application::Application(const logger::Logger& logger)
-        : logger(logger)
-    {}
-
     int Application::run(int argc, const char* argv[])
     {
-        logger.detail("Application start");
-        std::cout << "Hello CQRS" << std::endl;
+        caf::actor_system_config config;
+        caf::actor_system system{ config };
+
+        caf::actor appRoot = system.spawn<AppRootActor>();
+        caf::anon_send(appRoot, std::string("Hello CppQRS"));
+
         return EXIT_SUCCESS;
     }
 }
