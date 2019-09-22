@@ -10,10 +10,14 @@ add_executable(CppQRS
 	cqrs/Application.cpp 
 	cqrs/AppRootActor.cpp 
 	cqrs/AppRootActor.h 
-	logger/Logger.h 
-	logger/ConsoleLogger.h 
-	logger/ConsoleLogger.cpp
+	cqrs/ZmqPublisherActor.h
+	cqrs/ZmqPublisherActor.cpp
+	cqrs/msg/ZmqMessagePtr.h
+	cqrs/msg/QueryConfig.h
+	#logger/Logger.h 
+	#logger/ConsoleLogger.h 
+	#logger/ConsoleLogger.cpp
 )
 
 link_directories($ENV("LIB"))
-target_link_libraries(CppQRS IPHLPAPI caf_core_static libzmq-v141-mt-s-4_3_2)
+target_link_libraries(CppQRS IPHLPAPI caf_core_static libzmq-v141-mt-4_3_2)
