@@ -3,6 +3,7 @@
 #include "cqrs/AppRootActor.h"
 #include "cqrs/AppConfig.h"
 #include "cqrs/ZmqPublisherActor.h"
+#include "cqrs/ZmqSubscriberActor.h"
 #include "cqrs/msg/QueryConfig.h"
 #include "cqrs/msg/ZmqMessagePtr.h"
 
@@ -12,12 +13,14 @@ namespace cqrs {
         : caf::event_based_actor(actorConfig)
         , appConfig(appConfig)
     {
-        publisher = spawn<ZmqPublisherActor>(std::ref(networkContext), std::cref(appConfig.publisherAddr));
+        std::string subscriptionTopic{ "" };
+        publisher = spawn<ZmqPublisherActor , caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr));
+        subscriber = spawn<ZmqSubscriberActor , caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr), std::cref(subscriptionTopic));
     }
 
     caf::behavior AppRootActor::make_behavior()
     {
-        return caf::message_handler 
+        return caf::message_handler
         {
             [&](const std::string& value) 
             {

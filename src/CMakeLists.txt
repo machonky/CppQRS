@@ -12,6 +12,8 @@ add_executable(CppQRS
 	cqrs/AppRootActor.h 
 	cqrs/ZmqPublisherActor.h
 	cqrs/ZmqPublisherActor.cpp
+	cqrs/ZmqSubscriberActor.h
+	cqrs/ZmqSubscriberActor.cpp
 	cqrs/msg/ZmqMessagePtr.h
 	cqrs/msg/QueryConfig.h
 	#logger/Logger.h 
