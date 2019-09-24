@@ -15,7 +15,10 @@ namespace cqrs {
     {
         std::string subscriptionTopic{ "" };
         publisher = spawn<ZmqPublisherActor , caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr));
-        subscriber = spawn<ZmqSubscriberActor , caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr), std::cref(subscriptionTopic));
+        subscriber = spawn<ZmqSubscriberActor, caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr), std::cref(subscriptionTopic));
+
+        std::string multiTopic{ "com.example" };
+        multiSubscriber = spawn<ZmqSubscriberActor, caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr), std::cref(multiTopic));
     }
 
     caf::behavior AppRootActor::make_behavior()
@@ -27,6 +30,11 @@ namespace cqrs {
                 caf::aout(this) << "Publishing \""<< value <<"\""<< std::endl;
                 ZmqMessagePtr msg = makeZmqMessagePtr(value.data(), value.size());
                 send(publisher, msg);
+
+                ZmqMultipartPtr multi = makeZmqMultipartPtr();
+                multi->pushstr("com.example");
+                multi->addstr(value);
+                send(publisher, multi);
             },
             [&](msg::QueryConfig) 
             { 

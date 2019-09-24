@@ -24,6 +24,7 @@ namespace cqrs {
         std::thread pollerThread;
 
         void pollSubscription();
+        void pollMultipartSubscription();
         void onExit(caf::exit_msg& reason);
     };
 

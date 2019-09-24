@@ -13,6 +13,7 @@ namespace cqrs {
         const AppConfig appConfig;
         caf::actor publisher;
         caf::actor subscriber;
+        caf::actor multiSubscriber;
 
     public:
         AppRootActor(caf::actor_config& actorConfig, zmq::context_t& networkContext, const AppConfig& appConfig);
