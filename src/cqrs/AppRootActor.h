@@ -14,6 +14,7 @@ namespace cqrs {
         caf::actor publisher;
         caf::actor subscriber;
         caf::actor multiSubscriber;
+        caf::actor special;
 
     public:
         AppRootActor(caf::actor_config& actorConfig, zmq::context_t& networkContext, const AppConfig& appConfig);
