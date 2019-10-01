@@ -3,9 +3,11 @@
 #include "cqrs/AppRootActor.h"
 #include "cqrs/AppConfig.h"
 #include "cqrs/ZmqPublisherActor.h"
-#include "cqrs/ZmqSubscriberActor.h"
+#include "cqrs/ZmqSubscriberMessageSource.h"
+#include "cqrs/ZmqTextMessageSink.h"
 #include "cqrs/msg/QueryConfig.h"
 #include "cqrs/msg/ZmqMessagePtr.h"
+#include "cqrs/msg/Stream.h"
 
 namespace cqrs {
 
@@ -13,15 +15,19 @@ namespace cqrs {
         : caf::event_based_actor(actorConfig)
         , appConfig(appConfig)
     {
-        std::string subscriptionTopic{ "" };
-        publisher = spawn<ZmqPublisherActor , caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr));
-        subscriber = spawn<ZmqSubscriberActor, caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr), std::cref(subscriptionTopic));
+        using namespace std;
+        publisher = spawn<ZmqPublisherActor , caf::linked>(ref(networkContext), cref(appConfig.publisherAddr));
 
-        std::string multiTopic{ "com.example" }; // this is a broader topic than com.example.specific so it will respond too
-        multiSubscriber = spawn<ZmqSubscriberActor, caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr), std::cref(multiTopic));
+        string specificTopic{ "com.example.specific" };
+        caf::actor specificSource = 
+            spawn<ZmqSubscriberMessageSource, caf::linked>(ref(networkContext), cref(appConfig.publisherAddr), cref(specificTopic));
+        caf::actor specificSink = spawn<ZmqTextMessageSink, caf::linked>();
 
-        std::string newTopic = "com.example.specific";
-        special = spawn<ZmqSubscriberActor, caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr), std::cref(newTopic));
+        // Assemble the pipeline
+        multiSubscriber = specificSink * specificSource;
+
+        caf::anon_send(multiSubscriber, msg::StartStream());
+        caf::aout(this) << "Sent stream handshake to com.example.specific pipeline" << std::endl;
     }
 
     caf::behavior AppRootActor::make_behavior()

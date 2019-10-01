@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
-#include <thread>
+#include <chrono>
 #include <caf/all.hpp>
 #include <zmq.hpp>
 #include "cqrs/Application.h"
@@ -24,6 +24,9 @@ namespace cqrs {
         // Send some messages to the publishing actor
         caf::anon_send(appRoot, std::string("Hello CppQRS"));
         caf::anon_send(appRoot, msg::QueryConfig());
+
+        std::cin.get();
+
 
         return EXIT_SUCCESS;
     }
