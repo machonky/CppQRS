@@ -63,7 +63,7 @@ namespace cqrs {
         {
             //caf::aout(&host) << "Starting poller polling:" << (bool)willContinuePolling << std::endl;
             MsgType msg;
-            std::vector<zmq::pollitem_t> pollItems = { {subscriberSocket, 0, ZMQ_POLLIN, 0} };
+            std::vector<zmq::pollitem_t> pollItems = { {subscriberSocket.handle(), 0, ZMQ_POLLIN, 0} };
             while (willContinuePolling)
             {
                 if (zmq::poll(pollItems.data(), 1, 0) == 1)
