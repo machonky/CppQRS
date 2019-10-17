@@ -25,8 +25,9 @@ namespace cqrs {
     }
 
     template <>
-    struct ZmqMsgPtrTraits<ZmqMessagePtr> {
-        static void recv(zmq::socket_t& socket, ZmqMessagePtr& msg) 
+    struct ZmqMsgPtrTraits<ZmqMessagePtr> 
+    {
+        static void recv(zmq::detail::socket_base& socket, ZmqMessagePtr& msg) 
         { 
             msg = makeZmqMessagePtr();
             socket.recv(*msg); 
@@ -44,13 +45,32 @@ namespace cqrs {
         return std::make_shared<zmq::multipart_t>(std::forward<CtorParamTypes>(args)...);
     }
 
+    inline bool recv_multi(zmq::multipart_t& multiMsg, zmq::detail::socket_base& socket, int flags = 0)
+    {
+        multiMsg.clear();
+        bool more = true;
+        while (more) {
+            zmq::message_t message;
+#ifdef ZMQ_CPP11
+            if (!socket.recv(message, static_cast<zmq::recv_flags>(flags)))
+                return false;
+#else
+            if (!socket.recv(&message, flags))
+                return false;
+#endif
+            more = message.more();
+            multiMsg.add(std::move(message));
+        }
+        return true;
+    }
+
     template <>
     struct ZmqMsgPtrTraits<ZmqMultipartPtr> 
     {
-        static void recv(zmq::socket_t& socket, ZmqMultipartPtr& msg)
+        static void recv(zmq::detail::socket_base& socket, ZmqMultipartPtr& msg)
         {
             msg = makeZmqMultipartPtr();
-            msg->recv(socket);
+            recv_multi(*msg, socket);
         }
     };
 }
