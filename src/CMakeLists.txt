@@ -17,6 +17,8 @@ add_executable(CppQRS
 	cqrs/ZmqTextMessageSink.h
 	cqrs/ZmqSubscriberMessageSource.cpp
 	cqrs/ZmqSubscriberMessageSource.h
+	cqrs/ZmqReactor.h
+	cqrs/ZmqReactor.cpp
 	cqrs/msg/ZmqMessagePtr.h
 	cqrs/msg/QueryConfig.h
 	#logger/Logger.h 
@@ -26,4 +28,4 @@ add_executable(CppQRS
 
 #ZeroMq, CAF & boost libs are in the "LIB" env variable
 link_directories($ENV("LIB"))
-target_link_libraries(CppQRS IPHLPAPI caf_core_static libzmq-v141-mt-4_3_2)
+target_link_libraries(CppQRS iphlpapi caf_core_static libzmq-v141-mt-4_3_2)
