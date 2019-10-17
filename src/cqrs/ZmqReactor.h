@@ -27,7 +27,7 @@ namespace cqrs {
             SocketCallback react;
         };
 
-        using ReactionMap = std::unordered_multimap<zmq::socket_ref, Reaction>;
+        using ReactionMap = std::unordered_map<zmq::socket_ref, Reaction>;
         using PollItemSeq = std::vector<zmq::pollitem_t>;
 
         PollItemSeq pollItems;

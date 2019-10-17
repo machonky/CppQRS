@@ -8,6 +8,7 @@ namespace cqrs {
     {
         zmq::socket_ref handle(socket);
         Reaction reaction = { { socket.handle(), 0, ZMQ_POLLIN, 0 }, callback };
+
         pollItems.push_back(reaction.pollitem);
         reactions.insert(std::make_pair(handle, std::move(reaction)));
     }
@@ -22,12 +23,8 @@ namespace cqrs {
                 if (item.revents & ZMQ_POLLIN)
                 {
                     zmq::socket_ref handle(zmq::from_handle, item.socket);
-                    auto range = reactions.equal_range(handle);
-                    std::for_each(range.first, range.second, [&](ReactionMap::value_type& kvp)
-                    {
-                        auto& reaction = kvp.second;
-                        reaction.react(handle);
-                    });
+                    auto& reaction = reactions[handle];
+                    reaction.react(handle);
                 }
             }
         }
