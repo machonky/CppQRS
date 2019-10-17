@@ -2,6 +2,9 @@
 #include <utility>
 #include <functional>
 #include <iostream>
+#include "cqrs/ZmqReactor.h"
+#undef min // hack!
+#undef max // hack!
 #include "cqrs/ZmqSubscriberMessageSource.h"
 #include "cqrs/msg/Stream.h"
 #include "cqrs/msg/ZmqMessagePtr.h"
@@ -16,15 +19,23 @@ namespace cqrs {
         using QueueType = std::deque<MsgType>;
 
         QueueType srcMessageBuffer;
+        ZmqReactor reactor;
 
         ZmqMessageStreamBuilder(ZmqSubscriberMessageSource& host, zmq::socket_t& subscriberSocket, const std::string& subscriptionTopic)
             : ZmqSubscriberMessageSource::StreamBuilder(host, subscriberSocket, subscriptionTopic)
         {
-            using namespace std;
-            pollerThread = move(thread(bind(&ZmqMessageStreamBuilder::pollSubscription, this)));
+            reactor.addReaction(subscriberSocket, std::bind(&ZmqMessageStreamBuilder::onMsgReceived, this, std::placeholders::_1));
+            pollerThread = std::move(std::thread([&]() { while (willContinuePolling) reactor.poll(0); }));
         }
 
         virtual ~ZmqMessageStreamBuilder() {}
+
+        void onMsgReceived(zmq::socket_ref s)
+        {
+            MsgType msg;
+            ZmqMsgPtrTraits<MsgType>::recv(s, msg);
+            caf::anon_send(&host, msg); // inject into the actor system
+        }
         
         caf::behavior make_behavior() override
         {
@@ -58,40 +69,18 @@ namespace cqrs {
                 }
             };
         }
-
-        void pollSubscription() 
-        {
-            //caf::aout(&host) << "Starting poller polling:" << (bool)willContinuePolling << std::endl;
-            MsgType msg;
-            std::vector<zmq::pollitem_t> pollItems = { {subscriberSocket.handle(), 0, ZMQ_POLLIN, 0} };
-            while (willContinuePolling)
-            {
-                if (zmq::poll(pollItems.data(), 1, 0) == 1)
-                {
-                    if (pollItems[0].revents & ZMQ_POLLIN)
-                    {
-                        MsgType msg;
-                        ZmqMsgPtrTraits<MsgType>::recv(subscriberSocket, msg);
-                        caf::anon_send(&host, msg); // inject into the actor system
-                        //caf::aout(&host) << "Received zmq msg" << std::endl;
-                    }
-                }
-            }
-            //caf::aout(&host) << "Finishing poller polling:" << (bool)willContinuePolling << std::endl;
-        }
     };
 
     ZmqSubscriberMessageSource::ZmqSubscriberMessageSource(caf::actor_config& actorConfig, zmq::context_t& networkContext, const std::string& socketAddr, const std::string& subscrTopic)
         : caf::event_based_actor(actorConfig)
         , subscriberSocket(networkContext, zmq::socket_type::sub)
     {
-        using namespace std;
-        set_exit_handler(bind(&ZmqSubscriberMessageSource::onExit, this, placeholders::_1));
+        set_exit_handler(std::bind(&ZmqSubscriberMessageSource::onExit, this, std::placeholders::_1));
 
         subscriberSocket.connect(socketAddr);
         subscriberSocket.setsockopt(ZMQ_SUBSCRIBE, subscrTopic.c_str(), subscrTopic.size());
 
-        streamBuilder = subscrTopic == string()
+        streamBuilder = subscrTopic == std::string()
             ? StreamBuilderPtr(new ZmqMessageStreamBuilder<zmq::message_t>(*this, subscriberSocket, subscrTopic))
             : StreamBuilderPtr(new ZmqMessageStreamBuilder<zmq::multipart_t>(*this, subscriberSocket, subscrTopic));
 

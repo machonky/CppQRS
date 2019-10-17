@@ -17,7 +17,7 @@ namespace cqrs {
         {
             [&](ZmqMessagePtr msg)
             {
-                publisherSocket.send(*msg);
+                publisherSocket.send(*msg, zmq::send_flags::none);
             },
             [&](ZmqMultipartPtr msg)
             {

@@ -15,12 +15,11 @@ namespace cqrs {
         : caf::event_based_actor(actorConfig)
         , appConfig(appConfig)
     {
-        using namespace std;
-        publisher = spawn<ZmqPublisherActor , caf::linked>(ref(networkContext), cref(appConfig.publisherAddr));
+        publisher = spawn<ZmqPublisherActor , caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr));
 
-        string specificTopic{ "com.example.specific" };
+        std::string specificTopic{ "com.example.specific" };
         caf::actor specificSource = 
-            spawn<ZmqSubscriberMessageSource, caf::linked>(ref(networkContext), cref(appConfig.publisherAddr), cref(specificTopic));
+            spawn<ZmqSubscriberMessageSource, caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr), std::cref(specificTopic));
         caf::actor specificSink = spawn<ZmqTextMessageSink, caf::linked>();
 
         // Assemble the pipeline
