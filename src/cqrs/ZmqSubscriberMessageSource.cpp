@@ -3,8 +3,6 @@
 #include <functional>
 #include <iostream>
 #include "cqrs/ZmqReactor.h"
-#undef min // hack!
-#undef max // hack!
 #include "cqrs/ZmqSubscriberMessageSource.h"
 #include "cqrs/msg/Stream.h"
 #include "cqrs/msg/ZmqMessagePtr.h"
@@ -24,7 +22,7 @@ namespace cqrs {
         ZmqMessageStreamBuilder(ZmqSubscriberMessageSource& host, zmq::socket_t& subscriberSocket, const std::string& subscriptionTopic)
             : ZmqSubscriberMessageSource::StreamBuilder(host, subscriberSocket, subscriptionTopic)
         {
-            reactor.addReaction(subscriberSocket, std::bind(&ZmqMessageStreamBuilder::onMsgReceived, this, std::placeholders::_1));
+            reactor.addReaction(subscriberSocket, std::bind(&ZmqMessageStreamBuilder::onMsgReceived, this, std::placeholders::_1), true);
             pollerThread = std::move(std::thread([&]() { while (willContinuePolling) reactor.poll(0); }));
         }
 
