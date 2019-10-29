@@ -5,6 +5,8 @@
 #include <functional>
 #include <atomic>
 #include <memory>
+#include <chrono>
+
 #include <zmq.hpp>
 #undef min // hack!
 #undef max // hack!
@@ -27,7 +29,7 @@ namespace cqrs {
 
         void init();
 
-        int poll(long timeout);
+        int poll(std::chrono::milliseconds timeout);
 
     private:
         struct Reaction

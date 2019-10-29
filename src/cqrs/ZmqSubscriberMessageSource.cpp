@@ -23,7 +23,7 @@ namespace cqrs {
             : ZmqSubscriberMessageSource::StreamBuilder(host, subscriberSocket, subscriptionTopic)
         {
             reactor.addReaction(subscriberSocket, std::bind(&ZmqMessageStreamBuilder::onMsgReceived, this, std::placeholders::_1), true);
-            pollerThread = std::move(std::thread([&]() { while (willContinuePolling) reactor.poll(0); }));
+            pollerThread = std::move(std::thread([&]() { while (willContinuePolling) reactor.poll(std::chrono::milliseconds(0)); }));
         }
 
         virtual ~ZmqMessageStreamBuilder() {}

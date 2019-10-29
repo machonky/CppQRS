@@ -39,26 +39,26 @@ namespace cqrs {
                 purgeItems.push_back(kvp.first);
             }
         }
+
         for (auto&& s : purgeItems)
         {
             reactions.erase(s);
         }
     }
     
-    int ZmqReactor::poll(long timeout)
+    int ZmqReactor::poll(std::chrono::milliseconds timeout)
     {
         int result = zmq::poll(pollItems, timeout);
         if (result > 0)
         {
-            for(auto&& kvp : reactions)
+            for(auto&& item : pollItems)
             {
-                auto& reaction = kvp.second;
+                zmq::socket_ref handle(zmq::from_handle, item.socket);
+                auto& reaction = reactions[handle];
                 if (reaction->active)
                 {
-                    auto&& item = reaction->pollitem;
-                    if (item.events & ZMQ_POLLIN)
+                    if (item.revents & ZMQ_POLLIN)
                     {
-                        zmq::socket_ref handle(zmq::from_handle, item.socket);
                         reaction->react(handle);
                     }
                 }

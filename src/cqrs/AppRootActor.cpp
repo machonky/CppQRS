@@ -1,11 +1,10 @@
 #include <string>
-#include <iostream>
+//#include <iostream>
 #include "cqrs/AppRootActor.h"
 #include "cqrs/AppConfig.h"
 #include "cqrs/ZmqPublisherActor.h"
 #include "cqrs/ZmqSubscriberMessageSource.h"
 #include "cqrs/ZmqTextMessageSink.h"
-#include "cqrs/msg/QueryConfig.h"
 #include "cqrs/msg/ZmqMessagePtr.h"
 #include "cqrs/msg/Stream.h"
 
@@ -20,6 +19,7 @@ namespace cqrs {
         std::string specificTopic{ "com.example.specific" };
         caf::actor specificSource = 
             spawn<ZmqSubscriberMessageSource, caf::linked>(std::ref(networkContext), std::cref(appConfig.publisherAddr), std::cref(specificTopic));
+
         caf::actor specificSink = spawn<ZmqTextMessageSink, caf::linked>();
 
         // Assemble the pipeline
@@ -43,10 +43,6 @@ namespace cqrs {
                 multi->pushstr("com.example.specific");
                 multi->addstr(value);
                 send(publisher, multi);
-            },
-            [&](msg::QueryConfig) 
-            { 
-                caf::aout(this) << "Publisher address: " << appConfig.publisherAddr << std::endl;
             }
         };
     }
